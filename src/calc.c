@@ -40,9 +40,10 @@ void findOperations(char operator, struct Token equation[], int *equationCounter
 	int i = 0, j;
 	while (i < *equationCounter) {
 		if (strcmp(equation[i].type, OP) == 0 && equation[i].charVal == operator) {
-			if (i == 0 || i == *equationCounter - 1 || strcmp(equation[i - 1].type, NUM) || strcmp(equation[i + 1].type, NUM)) {
-				printf("Sytax error.\n");
-				exit(1);
+			if (i == 0 || i == *equationCounter - 1 || strcmp(equation[i - 1].type, NUM)
+				|| strcmp(equation[i + 1].type, NUM)) {
+					printf("Sytax error.\n");
+					exit(1);
 			}
 
 			equation[i - 1].intVal = operation(operator, equation[i - 1].intVal, equation[i + 1].intVal);
