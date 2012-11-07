@@ -21,13 +21,13 @@ calc <equation>
 ## Example
 Most simple usage of `calc(n)`:
 ```
-calc 1 + 1
+$ calc 1 + 1
 = 2
 ```
 
 Precedence is correctly respected:
 ```
-calc 2 + 4 x 50 + 2
+$ calc 2 + 4 x 50 + 2
 = 204
 ```
 
