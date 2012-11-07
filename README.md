@@ -13,6 +13,7 @@ Notes:
 * **Use `x` rather than `*` for multiplication**
 * Currently only supports division, multiplication, addition and subtraction ([see issues](https://github.com/thomseddon/calc/issues) for roadmap)
 * On windows substitue `calc` for `calc.exe` below
+
 ```
 calc <equation>
 ```
