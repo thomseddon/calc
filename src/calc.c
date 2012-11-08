@@ -21,7 +21,7 @@
 #include "calc.h"
 
 
-long int operation(char operator, long int pre, long int post)
+double operation(char operator, double pre, double post)
 {
 	switch (operator){
 		case '/': return pre / post;
@@ -71,7 +71,7 @@ void main(int argc, char *argv[])
 {
 	char *str;
 	int i, equationCounter = 0;
-	long int number, total = 0;
+	double number, total = 0.0L;
 
 	/* TODO: Grow this properly */
 	struct Token equation[200];
@@ -81,7 +81,7 @@ void main(int argc, char *argv[])
 		str = argv[i];
 
 		while (*str != '\0') {
-			if ((number = strtol(str, &str, 10)) == 0L) {
+			if ((number = strtold(str, &str)) == 0.0L && (number = (double) strtol(str, &str, 10)) == 0.0L) {
 				/* NaN */
 
 				/* Using '*' seems to screw up argv */
@@ -111,5 +111,9 @@ void main(int argc, char *argv[])
 	findOperations('+', equation, &equationCounter); //bodmAs
 	findOperations('-', equation, &equationCounter); //bodmaS
 
-	printf("\n= %d\n", equation[0].intVal);
+	/*
+	 * TODO: Increase precision
+	 * TODO: Allow precision to be specified
+	 */
+	printf("\n= %.15g\n", equation[0].intVal);
 }

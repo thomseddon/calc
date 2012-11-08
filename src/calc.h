@@ -21,5 +21,5 @@
 struct Token {
 	char type[3];
 	char charVal;
-	long int intVal;
+	double intVal;
 };
