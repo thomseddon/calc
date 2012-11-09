@@ -81,7 +81,10 @@ void main(int argc, char *argv[])
 		str = argv[i];
 
 		while (*str != '\0') {
-			if ((number = strtold(str, &str)) == 0.0L && (number = (double) strtol(str, &str, 10)) == 0.0L) {
+			if (isspace(*str)) {
+				/* Space */
+				*str++;
+			} else if ((number = strtold(str, &str)) == 0.0L && (number = (double) strtol(str, &str, 10)) == 0.0L) {
 				/* NaN */
 
 				/* Using '*' seems to screw up argv */
@@ -89,11 +92,9 @@ void main(int argc, char *argv[])
 					*str = '*';
 				}
 
-				if (*str != ' ') {
-					strcpy(equation[equationCounter].type, OP);
-					equation[equationCounter].charVal = *str;
-					equationCounter++;
-				}
+				strcpy(equation[equationCounter].type, OP);
+				equation[equationCounter].charVal = *str;
+				equationCounter++;
 
 				*str++;
 			} else {
