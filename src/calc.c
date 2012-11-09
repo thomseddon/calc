@@ -74,11 +74,24 @@ double strtoconst(char *nptr, char **endptr)
 	return replace;
 }
 
+char normalise(char operator)
+{
+	switch (operator) {
+		case 'x':
+		case '*':
+			return '*';
+		case '\'':
+		case '^':
+			return '^';
+		default:
+			return operator;
+	}
+}
 
 double operation(char operator, double pre, double post)
 {
 	switch (operator) {
-		case '\'': return pow(pre, post);
+		case '^': return pow(pre, post);
 		case '/': return pre / post;
 		case 'x': return pre * post;
 		case '+': return pre + post;
@@ -142,7 +155,7 @@ void main(int argc, char *argv[])
 			} else if ((number = strtold(str, &str)) == 0.0L && (number = strtoconst(str, &str)) == 0.0L) {
 				/* NaN */
 				strcpy(equation[equationCounter].type, OP);
-				equation[equationCounter].charVal = *str;
+				equation[equationCounter].charVal = normalise(*str);
 				equationCounter++;
 
 				*str++;
@@ -156,9 +169,9 @@ void main(int argc, char *argv[])
 	}
 
 	/* Evaluate */
-	findOperations('\'', equation, &equationCounter); //bOdmas
+	findOperations('^', equation, &equationCounter); //bOdmas
 	findOperations('/', equation, &equationCounter); //boDmas
-	findOperations('x', equation, &equationCounter); //bodMas
+	findOperations('*', equation, &equationCounter); //bodMas
 	findOperations('+', equation, &equationCounter); //bodmAs
 	findOperations('-', equation, &equationCounter); //bodmaS
 
