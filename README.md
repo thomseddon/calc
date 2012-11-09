@@ -32,10 +32,10 @@ $ calc 2 + 4 x 50 + 2
 = 204
 ```
 
-A few constants (e, pi and phi) are built in:
+Powers also work
 ```
-$ calc 2 x pi
-= 6.28318530717959
+$ calc 2'3
+= 9
 ```
 
 A few constants (e, pi and phi) are built in:
