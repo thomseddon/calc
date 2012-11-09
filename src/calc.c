@@ -84,7 +84,7 @@ void main(int argc, char *argv[])
 			if (isspace(*str)) {
 				/* Space */
 				*str++;
-			} else if ((number = strtold(str, &str)) == 0.0L && (number = (double) strtol(str, &str, 10)) == 0.0L) {
+			} else if ((number = strtold(str, &str)) == 0.0L) {
 				/* NaN */
 
 				/* Using '*' seems to screw up argv */
