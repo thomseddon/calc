@@ -77,7 +77,8 @@ double strtoconst(char *nptr, char **endptr)
 
 double operation(char operator, double pre, double post)
 {
-	switch (operator){
+	switch (operator) {
+		case '\'': return pow(pre, post);
 		case '/': return pre / post;
 		case 'x': return pre * post;
 		case '+': return pre + post;
@@ -155,6 +156,7 @@ void main(int argc, char *argv[])
 	}
 
 	/* Evaluate */
+	findOperations('\'', equation, &equationCounter); //bOdmas
 	findOperations('/', equation, &equationCounter); //boDmas
 	findOperations('x', equation, &equationCounter); //bodMas
 	findOperations('+', equation, &equationCounter); //bodmAs
