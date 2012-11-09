@@ -79,7 +79,7 @@ double operation(char operator, double pre, double post)
 {
 	switch (operator){
 		case '/': return pre / post;
-		case '*': return pre * post;
+		case 'x': return pre * post;
 		case '+': return pre + post;
 		case '-': return pre - post;
 	}
@@ -140,12 +140,6 @@ void main(int argc, char *argv[])
 				*str++;
 			} else if ((number = strtold(str, &str)) == 0.0L && (number = strtoconst(str, &str)) == 0.0L) {
 				/* NaN */
-
-				/* Using '*' seems to screw up argv */
-				if (*str == 'x') {
-					*str = '*';
-				}
-
 				strcpy(equation[equationCounter].type, OP);
 				equation[equationCounter].charVal = *str;
 				equationCounter++;
@@ -162,7 +156,7 @@ void main(int argc, char *argv[])
 
 	/* Evaluate */
 	findOperations('/', equation, &equationCounter); //boDmas
-	findOperations('*', equation, &equationCounter); //bodMas
+	findOperations('x', equation, &equationCounter); //bodMas
 	findOperations('+', equation, &equationCounter); //bodmAs
 	findOperations('-', equation, &equationCounter); //bodmaS
 
