@@ -15,6 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with calc.  If not, see <http://www.gnu.org/licenses/>.
 
+/* strtoconst */
+#define MAX_CONST_LEN 3
+
+struct Constant {
+	char name[MAX_CONST_LEN];
+	double value;
+	int match;
+	int matched;
+	int caseSensative;
+};
+
+/* main */
 #define OP "OP"
 #define NUM "NUM"
 

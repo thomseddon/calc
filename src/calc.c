@@ -18,7 +18,61 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "calc.h"
+
+/*
+ * Parses a C string to return numeric constant value if constant is found
+ * Inspiration taken from library functions strto*, namely:
+ * - OpenBSD: ftp://ftp.irisa.fr/pub/OpenBSD/src/sys/lib/libsa/strtol.c
+ * - Apple: http://www.opensource.apple.com/source/xnu/xnu-1456.1.26/bsd/libkern/strtol.c
+ *
+ */
+double strtoconst(char *nptr, char **endptr)
+{
+	/*
+	 * Constants to check for
+	 */
+	int constantCount = 3;
+	struct Constant constants[] = {
+		{"e", 2.71828182845904523536, 1, 0, 1},
+		{"pi", 3.14159265358979323846, 2, 0, 0},
+		{"phi", (1.0 + pow(5.0, 0.5)) / 2.0, 3, 0, 0} /* Golden Ratio */
+	};
+	struct Constant *ct;
+
+	char *s = nptr;
+	int c, i, j, broken = 0;
+	double replace = 0.0L;
+
+	/* Skip preceeding whitespace */
+	do {
+		c = (unsigned char) *s++;
+	} while (isspace(c));
+
+	for (i = 0; i < MAX_CONST_LEN; i++, c = (unsigned char) *s++) {
+		ct = constants;
+		for (j = 0; j < constantCount ; j++, *ct++) {
+			if (ct->name[i] != 0 && (ct->caseSensative ? c : tolower(c)) == ct->name[i]) {
+				if (ct->match == ++ct->matched) {
+					replace = ct->value;
+					break;
+				}
+			}
+		}
+
+		if (replace) {
+			/* Match has been found */
+			break;
+		}
+	}
+
+	if (endptr != 0) {
+		*endptr = (char *) (replace ? s : nptr);
+	}
+
+	return replace;
+}
 
 
 double operation(char operator, double pre, double post)
@@ -84,7 +138,7 @@ void main(int argc, char *argv[])
 			if (isspace(*str)) {
 				/* Space */
 				*str++;
-			} else if ((number = strtold(str, &str)) == 0.0L) {
+			} else if ((number = strtold(str, &str)) == 0.0L && (number = strtoconst(str, &str)) == 0.0L) {
 				/* NaN */
 
 				/* Using '*' seems to screw up argv */
