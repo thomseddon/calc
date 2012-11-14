@@ -93,7 +93,7 @@ double operation(char operator, double pre, double post)
 	switch (operator) {
 		case '^': return pow(pre, post);
 		case '/': return pre / post;
-		case 'x': return pre * post;
+		case '*': return pre * post;
 		case '+': return pre + post;
 		case '-': return pre - post;
 	}
