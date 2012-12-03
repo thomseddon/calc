@@ -35,3 +35,9 @@ struct Token {
 	char charVal;
 	double intVal;
 };
+
+struct Equation {
+	int size;
+	int used;
+	struct Token *tokens;
+};

@@ -21,6 +21,18 @@
 #include <math.h>
 #include "calc.h"
 
+void insertToken(struct Equation *equation, char *type, char charVal, double intVal)
+{
+	if (equation->used == equation->size) {
+		equation->size += 5;
+		equation->tokens = realloc(equation->tokens, equation->size * sizeof(struct Token));
+	}
+	strcpy(equation->tokens[equation->used].type, type);
+	equation->tokens[equation->used].charVal = charVal;
+	equation->tokens[equation->used].intVal = intVal;
+	equation->used++;
+}
+
 /*
  * Parses a C string to return numeric constant value if constant is found
  * Inspiration taken from library functions strto*, namely:
@@ -138,11 +150,14 @@ void findOperations(char operator, struct Token equation[], int *equationCounter
 void main(int argc, char *argv[])
 {
 	char *str;
-	int i, equationCounter = 0;
+	int i;
 	double number, total = 0.0L;
 
-	/* TODO: Grow this properly */
-	struct Token equation[200];
+	/* Kick off equation array  */
+	struct Equation equation;
+	equation.size = 5;
+	equation.used = 0;
+	equation.tokens = malloc(equation.size * sizeof(struct Token));
 
 	/* Tokenise */
 	for (i = 1; i <  argc; i++) {
@@ -154,30 +169,29 @@ void main(int argc, char *argv[])
 				*str++;
 			} else if ((number = strtold(str, &str)) == 0.0L && (number = strtoconst(str, &str)) == 0.0L) {
 				/* NaN */
-				strcpy(equation[equationCounter].type, OP);
-				equation[equationCounter].charVal = normalise(*str);
-				equationCounter++;
-
+				insertToken(&equation, OP, normalise(*str), 0);
 				*str++;
 			} else {
 				/* Number */
-				strcpy(equation[equationCounter].type, NUM);
-				equation[equationCounter].intVal = number;
-				equationCounter++;
+				insertToken(&equation, NUM, '\0', number);
 			}
 		}
 	}
 
 	/* Evaluate */
-	findOperations('^', equation, &equationCounter); //bOdmas
-	findOperations('/', equation, &equationCounter); //boDmas
-	findOperations('*', equation, &equationCounter); //bodMas
-	findOperations('+', equation, &equationCounter); //bodmAs
-	findOperations('-', equation, &equationCounter); //bodmaS
+	findOperations('^', equation.tokens, &equation.used); //bOdmas
+	findOperations('/', equation.tokens, &equation.used); //boDmas
+	findOperations('*', equation.tokens, &equation.used); //bodMas
+	findOperations('+', equation.tokens, &equation.used); //bodmAs
+	findOperations('-', equation.tokens, &equation.used); //bodmaS
 
 	/*
 	 * TODO: Increase precision
 	 * TODO: Allow precision to be specified
 	 */
-	printf("\n= %.15g\n", equation[0].intVal);
+	printf("\n= %.15g\n", equation.tokens[0].intVal);
+
+	/* Cleanup */
+	free(equation.tokens);
+	equation.tokens = NULL;
 }
