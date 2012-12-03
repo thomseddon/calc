@@ -151,7 +151,7 @@ void main(int argc, char *argv[])
 {
 	char *str;
 	int i;
-	double number, total = 0.0L;
+	double number;
 
 	/* Kick off equation array  */
 	struct Equation equation;
