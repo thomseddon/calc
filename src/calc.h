@@ -34,6 +34,8 @@ struct Token {
 	char type[3];
 	char charVal;
 	double intVal;
+	struct Token *previous;
+	struct Token *next;
 };
 
 struct Equation {

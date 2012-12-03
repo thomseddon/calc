@@ -27,9 +27,16 @@ void insertToken(struct Equation *equation, char *type, char charVal, double int
 		equation->size += 5;
 		equation->tokens = realloc(equation->tokens, equation->size * sizeof(struct Token));
 	}
+
 	strcpy(equation->tokens[equation->used].type, type);
 	equation->tokens[equation->used].charVal = charVal;
 	equation->tokens[equation->used].intVal = intVal;
+
+	if (equation->used > 0) {
+		equation->tokens[equation->used].previous = &equation->tokens[equation->used - 1];
+		equation->tokens[equation->used].previous->next = &equation->tokens[equation->used];
+	}
+
 	equation->used++;
 }
 
@@ -115,35 +122,33 @@ double operation(char operator, double pre, double post)
 }
 
 
-void findOperations(char operator, struct Token equation[], int *equationCounter)
+void findOperations(char operator, struct Equation *equation)
 {
-	int i = 0, j;
-	while (i < *equationCounter) {
-		if (strcmp(equation[i].type, OP) == 0 && equation[i].charVal == operator) {
-			if (i == 0 || i == *equationCounter - 1 || strcmp(equation[i - 1].type, NUM)
-				|| strcmp(equation[i + 1].type, NUM)) {
+	int i;
+	struct Token *token = equation->tokens;
+
+	for(i = 0; i < equation->used; i++, token = &equation->tokens[i]) {
+		if (strcmp(token->type, OP) == 0 && token->charVal == operator) {
+			if (i == 0 || i == equation->used - 1 || strcmp(token->next->type, NUM)
+				|| strcmp(token->previous->type, NUM)) {
 					printf("Sytax error.\n");
 					exit(1);
 			}
 
-			equation[i - 1].intVal = operation(operator, equation[i - 1].intVal, equation[i + 1].intVal);
-
-			for (j = i; j < (*equationCounter - i + 1); j++) {
-				/*
-				 * Starting from the token after the operator, shift everything up two places:
-				 *  - 1 place for the operator
-				 *  - 1 place for the post number
-				 */
-				equation[j] = equation[j + 2];
+			/*
+			 * Rejig linked list
+			 *
+			 * NUM[1] OP[2] NUM[3]
+			 * 1 takes the value of NUM OP NUM
+			 * 2 and 3 are bypassed as links are removed
+			 */
+			token->previous->intVal = operation(token->charVal, token->previous->intVal, token->next->intVal);
+			if (equation->used - i > 2) {
+				token->previous->next = token->next->next;
+				token->next->next->previous = token->previous;
 			}
-
-			*equationCounter = *equationCounter - 2;
-
-		} else {
-			i++;
 		}
 	}
-
 }
 
 
@@ -178,12 +183,17 @@ void main(int argc, char *argv[])
 		}
 	}
 
+	if (equation.used > 1) {
+		equation.tokens[0].next = &equation.tokens[1];
+		equation.tokens[equation.used].previous = &equation.tokens[equation.used - 1];
+	}
+
 	/* Evaluate */
-	findOperations('^', equation.tokens, &equation.used); //bOdmas
-	findOperations('/', equation.tokens, &equation.used); //boDmas
-	findOperations('*', equation.tokens, &equation.used); //bodMas
-	findOperations('+', equation.tokens, &equation.used); //bodmAs
-	findOperations('-', equation.tokens, &equation.used); //bodmaS
+	findOperations('^', &equation); //bOdmas
+	findOperations('/', &equation); //boDmas
+	findOperations('*', &equation); //bodMas
+	findOperations('+', &equation); //bodmAs
+	findOperations('-', &equation); //bodmaS
 
 	/*
 	 * TODO: Increase precision
