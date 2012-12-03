@@ -20,8 +20,9 @@ calc <equation>
 ```
 Currently Supports: **powers**, **division**, **multiplication**, **addition** and **subtraction** ([see issues](https://github.com/thomseddon/calc/issues) for roadmap)
 
+**N.B. Use `x` rather than `*` for multiplication,** or surround the whole argument in speech marks: `"<equation>"`
+
 Windows Notes:
-* **Use `x` rather than `*` for multiplication,** or surround the whole argument in speech marks: `"<equation>"`
 * **Use `'` rather than `^` for powers,** or surround the whole argument in speech marks: `"<equation>"`
 * Substitue `./calc` for `calc.exe` below
 
