@@ -122,30 +122,33 @@ double operation(char operator, double pre, double post)
 }
 
 
-void findOperations(char operator, struct Equation *equation)
+void findOperations(char *operators, int numOperators, struct Equation *equation)
 {
-	int i;
+	int i, j;
+	char *operator;
 	struct Token *token = equation->tokens;
 
 	for(i = 0; i < equation->used; i++, token = &equation->tokens[i]) {
-		if (strcmp(token->type, OP) == 0 && token->charVal == operator) {
-			if (i == 0 || i == equation->used - 1 || strcmp(token->next->type, NUM)
-				|| strcmp(token->previous->type, NUM)) {
-					printf("Sytax error.\n");
-					exit(1);
-			}
+		for (j = 0, operator = operators; j < numOperators; j++, operator = &operators[j]) {
+			if (strcmp(token->type, OP) == 0 && token->charVal == *operator) {
+				if (i == 0 || i == equation->used - 1 || strcmp(token->next->type, NUM)
+					|| strcmp(token->previous->type, NUM)) {
+						printf("Sytax error.\n");
+						exit(1);
+				}
 
-			/*
-			 * Rejig linked list
-			 *
-			 * NUM[1] OP[2] NUM[3]
-			 * 1 takes the value of NUM OP NUM
-			 * 2 and 3 are bypassed as links are removed
-			 */
-			token->previous->intVal = operation(token->charVal, token->previous->intVal, token->next->intVal);
-			if (equation->used - i > 2) {
-				token->previous->next = token->next->next;
-				token->next->next->previous = token->previous;
+				/*
+				 * Rejig linked list
+				 *
+				 * NUM[1] OP[2] NUM[3]
+				 * 1 takes the value of NUM OP NUM
+				 * 2 and 3 are bypassed as links are removed
+				 */
+				token->previous->intVal = operation(token->charVal, token->previous->intVal, token->next->intVal);
+				if (equation->used - i > 2) {
+					token->previous->next = token->next->next;
+					token->next->next->previous = token->previous;
+				}
 			}
 		}
 	}
@@ -189,11 +192,9 @@ void main(int argc, char *argv[])
 	}
 
 	/* Evaluate */
-	findOperations('^', &equation); //bOdmas
-	findOperations('/', &equation); //boDmas
-	findOperations('*', &equation); //bodMas
-	findOperations('+', &equation); //bodmAs
-	findOperations('-', &equation); //bodmaS
+	findOperations("^", 1, &equation); //bOdmas
+	findOperations("*/", 2, &equation); //boDMas
+	findOperations("+-", 2, &equation); //bodmAS
 
 	/*
 	 * TODO: Increase precision
