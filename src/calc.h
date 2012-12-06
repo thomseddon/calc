@@ -39,7 +39,6 @@ struct Token {
 };
 
 struct Equation {
-	int size;
-	int used;
-	struct Token *tokens;
+	struct Token *first;
+	struct Token *last;
 };

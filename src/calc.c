@@ -18,26 +18,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <math.h>
 #include "calc.h"
 
 void insertToken(struct Equation *equation, char *type, char charVal, double intVal)
 {
-	if (equation->used == equation->size) {
-		equation->size += 5;
-		equation->tokens = realloc(equation->tokens, equation->size * sizeof(struct Token));
+	if (equation->last == NULL) {
+		equation->first = (struct Token *)malloc(sizeof(struct Token));
+		equation->last = equation->first;
+	} else {
+		equation->last->next = (struct Token *)malloc(sizeof(struct Token));
+		equation->last->next->previous = equation->last;
+		equation->last = equation->last->next;
 	}
 
-	strcpy(equation->tokens[equation->used].type, type);
-	equation->tokens[equation->used].charVal = charVal;
-	equation->tokens[equation->used].intVal = intVal;
+	equation->last->next = NULL;
 
-	if (equation->used > 0) {
-		equation->tokens[equation->used].previous = &equation->tokens[equation->used - 1];
-		equation->tokens[equation->used].previous->next = &equation->tokens[equation->used];
-	}
-
-	equation->used++;
+	strcpy(equation->last->type, type);
+	equation->last->charVal = charVal;
+	equation->last->intVal = intVal;
 }
 
 /*
@@ -61,7 +61,7 @@ double strtoconst(char *nptr, char **endptr)
 	struct Constant *ct;
 
 	char *s = nptr;
-	int c, i, j, broken = 0;
+	int c, i, j;
 	double replace = 0.0L;
 
 	/* Skip preceeding whitespace */
@@ -71,7 +71,7 @@ double strtoconst(char *nptr, char **endptr)
 
 	for (i = 0; i < MAX_CONST_LEN; i++, c = (unsigned char) *s++) {
 		ct = constants;
-		for (j = 0; j < constantCount ; j++, *ct++) {
+		for (j = 0; j < constantCount ; j++, ct++) {
 			if (ct->name[i] != 0 && (ct->caseSensative ? c : tolower(c)) == ct->name[i]) {
 				if (ct->match == ++ct->matched) {
 					replace = ct->value;
@@ -126,12 +126,13 @@ void findOperations(char *operators, int numOperators, struct Equation *equation
 {
 	int i, j;
 	char *operator;
-	struct Token *token = equation->tokens;
+	struct Token *token = equation->first, *newNext;
 
-	for(i = 0; i < equation->used; i++, token = &equation->tokens[i]) {
+	for(i = 0; token != NULL && token->next != NULL; i++, token = token->next) {
+
 		for (j = 0, operator = operators; j < numOperators; j++, operator = &operators[j]) {
 			if (strcmp(token->type, OP) == 0 && token->charVal == *operator) {
-				if (i == 0 || i == equation->used - 1 || strcmp(token->next->type, NUM)
+				if (token->previous == NULL || token->next == NULL || strcmp(token->next->type, NUM)
 					|| strcmp(token->previous->type, NUM)) {
 						printf("Sytax error.\n");
 						exit(1);
@@ -145,17 +146,26 @@ void findOperations(char *operators, int numOperators, struct Equation *equation
 				 * 2 and 3 are bypassed as links are removed
 				 */
 				token->previous->intVal = operation(token->charVal, token->previous->intVal, token->next->intVal);
-				if (equation->used - i > 2) {
-					token->previous->next = token->next->next;
-					token->next->next->previous = token->previous;
+
+				newNext = token->next->next;
+				token = token->previous;
+
+				free(token->next->next);
+				free(token->next);
+
+				token->next = newNext;
+				if (token->next != NULL) {
+					token->next->previous = token;
 				}
+
+				break;
 			}
 		}
 	}
 }
 
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	char *str;
 	int i;
@@ -163,9 +173,7 @@ void main(int argc, char *argv[])
 
 	/* Kick off equation array  */
 	struct Equation equation;
-	equation.size = 5;
-	equation.used = 0;
-	equation.tokens = malloc(equation.size * sizeof(struct Token));
+	equation.last = NULL;
 
 	/* Tokenise */
 	for (i = 1; i <  argc; i++) {
@@ -174,21 +182,16 @@ void main(int argc, char *argv[])
 		while (*str != '\0') {
 			if (isspace(*str)) {
 				/* Space */
-				*str++;
+				str++;
 			} else if ((number = strtold(str, &str)) == 0.0L && (number = strtoconst(str, &str)) == 0.0L) {
 				/* NaN */
 				insertToken(&equation, OP, normalise(*str), 0);
-				*str++;
+				str++;
 			} else {
 				/* Number */
 				insertToken(&equation, NUM, '\0', number);
 			}
 		}
-	}
-
-	if (equation.used > 1) {
-		equation.tokens[0].next = &equation.tokens[1];
-		equation.tokens[equation.used].previous = &equation.tokens[equation.used - 1];
 	}
 
 	/* Evaluate */
@@ -200,9 +203,11 @@ void main(int argc, char *argv[])
 	 * TODO: Increase precision
 	 * TODO: Allow precision to be specified
 	 */
-	printf("\n= %.15g\n", equation.tokens[0].intVal);
+	printf("\n= %.15g\n", equation.first->intVal);
 
 	/* Cleanup */
-	free(equation.tokens);
-	equation.tokens = NULL;
+	free(equation.first);
+	equation.first = NULL;
+
+	return 0;
 }
