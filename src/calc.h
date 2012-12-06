@@ -38,7 +38,10 @@ struct Token {
 	struct Token *next;
 };
 
-struct Equation {
+struct Scope {
+	int depth;
+	struct Scope *parent;
+	struct Scope *child;
 	struct Token *first;
 	struct Token *last;
 };

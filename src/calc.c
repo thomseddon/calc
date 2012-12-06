@@ -22,22 +22,41 @@
 #include <math.h>
 #include "calc.h"
 
-void insertToken(struct Equation *equation, char *type, char charVal, double intVal)
+void addScope(struct Scope *scope, struct Scope **currentScope)
 {
-	if (equation->last == NULL) {
-		equation->first = (struct Token *)malloc(sizeof(struct Token));
-		equation->last = equation->first;
+	if (scope == NULL) {
+		scope = (struct Scope *)malloc(sizeof(struct Scope));
+		scope->depth = 0;
+		scope->parent = NULL;
+		*currentScope = scope;
 	} else {
-		equation->last->next = (struct Token *)malloc(sizeof(struct Token));
-		equation->last->next->previous = equation->last;
-		equation->last = equation->last->next;
+		scope->child = (struct Scope *)malloc(sizeof(struct Scope));
+		scope->child->depth = scope->depth + 1;
+		scope->child->parent = scope;
+		*currentScope = scope->child;
 	}
 
-	equation->last->next = NULL;
+	(*currentScope)->child = NULL;
+	(*currentScope)->first = NULL;
+	(*currentScope)->last = NULL;
+}
 
-	strcpy(equation->last->type, type);
-	equation->last->charVal = charVal;
-	equation->last->intVal = intVal;
+void insertToken(struct Scope *scope, char *type, char charVal, double intVal)
+{
+	if (scope->last == NULL) {
+		scope->first = (struct Token *)malloc(sizeof(struct Token));
+		scope->last = scope->first;
+	} else {
+		scope->last->next = (struct Token *)malloc(sizeof(struct Token));
+		scope->last->next->previous = scope->last;
+		scope->last = scope->last->next;
+	}
+
+	scope->last->next = NULL;
+
+	strcpy(scope->last->type, type);
+	scope->last->charVal = charVal;
+	scope->last->intVal = intVal;
 }
 
 /*
@@ -122,14 +141,13 @@ double operation(char operator, double pre, double post)
 }
 
 
-void findOperations(char *operators, int numOperators, struct Equation *equation)
+void findOperations(char *operators, int numOperators, struct Scope *scope)
 {
 	int i, j;
 	char *operator;
-	struct Token *token = equation->first, *newNext;
+	struct Token *token = scope->first, *newNext;
 
 	for(i = 0; token != NULL && token->next != NULL; i++, token = token->next) {
-
 		for (j = 0, operator = operators; j < numOperators; j++, operator = &operators[j]) {
 			if (strcmp(token->type, OP) == 0 && token->charVal == *operator) {
 				if (token->previous == NULL || token->next == NULL || strcmp(token->next->type, NUM)
@@ -143,7 +161,7 @@ void findOperations(char *operators, int numOperators, struct Equation *equation
 				 *
 				 * NUM[1] OP[2] NUM[3]
 				 * 1 takes the value of NUM OP NUM
-				 * 2 and 3 are bypassed as links are removed
+				 * 2 and 3 are bypassed, freed as links are removed
 				 */
 				token->previous->intVal = operation(token->charVal, token->previous->intVal, token->next->intVal);
 
@@ -164,6 +182,32 @@ void findOperations(char *operators, int numOperators, struct Equation *equation
 	}
 }
 
+double evauateScope(struct Scope *scope, struct Scope **currentScope)
+{
+	double total;
+
+	/* Evaluate */
+	findOperations("^", 1, scope); //bOdmas
+	findOperations("*/", 2, scope); //boDMas
+	findOperations("+-", 2, scope); //bodmAS
+
+	/* Cleanup Tokens */
+	total = scope->first->intVal;
+	free(scope->first);
+
+	/*
+	 * If there is a parent then we asscend and clean up the child
+	 * otherwise we are at the top and can free the current scope
+	 */
+	*currentScope = scope->parent;
+	if (*currentScope != NULL) {
+		free((*currentScope)->child);
+	} else {
+		free(scope);
+	}
+
+	return total;
+}
 
 int main(int argc, char *argv[])
 {
@@ -171,9 +215,9 @@ int main(int argc, char *argv[])
 	int i;
 	double number;
 
-	/* Kick off equation array  */
-	struct Equation equation;
-	equation.last = NULL;
+	/* Kick off scope  */
+	struct Scope *currentScope = NULL;
+	addScope(currentScope, &currentScope);
 
 	/* Tokenise */
 	for (i = 1; i <  argc; i++) {
@@ -183,31 +227,28 @@ int main(int argc, char *argv[])
 			if (isspace(*str)) {
 				/* Space */
 				str++;
+			} else if (*str == '(') {
+				addScope(currentScope, &currentScope);
+				str++;
+			} else if (*str == ')') {
+				insertToken(currentScope, NUM, '\0', evauateScope(currentScope, &currentScope));
+				str++;
 			} else if ((number = strtold(str, &str)) == 0.0L && (number = strtoconst(str, &str)) == 0.0L) {
 				/* NaN */
-				insertToken(&equation, OP, normalise(*str), 0);
+				insertToken(currentScope, OP, normalise(*str), 0);
 				str++;
 			} else {
 				/* Number */
-				insertToken(&equation, NUM, '\0', number);
+				insertToken(currentScope, NUM, '\0', number);
 			}
 		}
 	}
-
-	/* Evaluate */
-	findOperations("^", 1, &equation); //bOdmas
-	findOperations("*/", 2, &equation); //boDMas
-	findOperations("+-", 2, &equation); //bodmAS
 
 	/*
 	 * TODO: Increase precision
 	 * TODO: Allow precision to be specified
 	 */
-	printf("\n= %.15g\n", equation.first->intVal);
-
-	/* Cleanup */
-	free(equation.first);
-	equation.first = NULL;
+	printf("\n= %.15g\n", evauateScope(currentScope, &currentScope));
 
 	return 0;
 }
