@@ -182,7 +182,7 @@ void findOperations(char *operators, int numOperators, struct Scope *scope)
 	}
 }
 
-double evauateScope(struct Scope *scope, struct Scope **currentScope)
+double evaluateScope(struct Scope *scope, struct Scope **currentScope)
 {
 	double total;
 
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
 				addScope(currentScope, &currentScope);
 				str++;
 			} else if (*str == ')') {
-				insertToken(currentScope, NUM, '\0', evauateScope(currentScope, &currentScope));
+				insertToken(currentScope, NUM, '\0', evaluateScope(currentScope, &currentScope));
 				str++;
 			} else if ((number = strtold(str, &str)) == 0.0L && (number = strtoconst(str, &str)) == 0.0L) {
 				/* NaN */
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
 	 * TODO: Increase precision
 	 * TODO: Allow precision to be specified
 	 */
-	printf("\n= %.15g\n", evauateScope(currentScope, &currentScope));
+	printf("\n= %.15g\n", evaluateScope(currentScope, &currentScope));
 
 	return 0;
 }
