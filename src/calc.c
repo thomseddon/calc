@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
 	 * TODO: Increase precision
 	 * TODO: Allow precision to be specified
 	 */
-	printf("\n= %.15g\n", evaluateScope(currentScope, &currentScope));
+	printf("%.15g\n", evaluateScope(currentScope, &currentScope));
 
 	return 0;
 }
