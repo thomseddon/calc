@@ -41,6 +41,31 @@ void addScope(struct Scope *scope, struct Scope **currentScope)
 	(*currentScope)->last = NULL;
 }
 
+void freeScope(struct Scope *scope, struct Scope **currentScope)
+{
+	struct Token *token = scope->first;
+
+	/* Free tokens */
+	if (token != NULL) {
+		while(token->next != NULL) {
+			token = token->next;
+			free(token->previous);
+		}
+		free(token);
+	}
+
+	/*
+	 * If there is a parent then we asscend and clean up the child
+	 * otherwise we are at the top and can free the current scope
+	 */
+	*currentScope = scope->parent;
+	if (*currentScope != NULL) {
+		free((*currentScope)->child);
+	} else {
+		free(scope);
+	}
+}
+
 void insertToken(struct Scope *scope, char *type, char charVal, double intVal)
 {
 	if (scope->last == NULL) {
@@ -57,6 +82,18 @@ void insertToken(struct Scope *scope, char *type, char charVal, double intVal)
 	strcpy(scope->last->type, type);
 	scope->last->charVal = charVal;
 	scope->last->intVal = intVal;
+}
+
+void freeAll(struct Scope *scope)
+{
+	/* Walk up scopes freeing all tokens */
+	while (scope->parent != NULL) {
+		scope = scope->parent;
+		freeScope(scope, &scope);
+	}
+
+	/* Free root scope */
+	freeScope(scope, &scope);
 }
 
 /*
@@ -137,7 +174,6 @@ double operation(char operator, double pre, double post)
 	}
 }
 
-
 void findOperations(char *operators, int numOperators, struct Scope *scope)
 {
 	int i;
@@ -149,6 +185,7 @@ void findOperations(char *operators, int numOperators, struct Scope *scope)
 			if (strcmp(token->type, OP) == 0 && token->charVal == *operator) {
 				if (token->previous == NULL || token->next == NULL || strcmp(token->next->type, NUM)
 					|| strcmp(token->previous->type, NUM)) {
+						freeAll(scope);
 						printf("Sytax error.\n");
 						exit(1);
 				}
@@ -188,24 +225,11 @@ double evaluateScope(struct Scope *scope, struct Scope **currentScope)
 	findOperations("*/", 2, scope); //boDMas
 	findOperations("+-", 2, scope); //bodmAS
 
-	/* Cleanup Tokens */
-	if (scope->first != NULL) {
-		total = scope->first->intVal;
-		free(scope->first);
-	} else {
-		total = 0;
-	}
+	/* Get total */
+	total = scope->first == NULL ? 0 : scope->first->intVal;
 
-	/*
-	 * If there is a parent then we asscend and clean up the child
-	 * otherwise we are at the top and can free the current scope
-	 */
-	*currentScope = scope->parent;
-	if (*currentScope != NULL) {
-		free((*currentScope)->child);
-	} else {
-		free(scope);
-	}
+	/* Cleanup */
+	freeScope(scope, currentScope);
 
 	return total;
 }
