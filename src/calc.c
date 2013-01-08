@@ -140,12 +140,12 @@ double operation(char operator, double pre, double post)
 
 void findOperations(char *operators, int numOperators, struct Scope *scope)
 {
-	int i, j;
+	int i;
 	char *operator;
 	struct Token *token = scope->first, *newNext;
 
-	for(i = 0; token != NULL && token->next != NULL; i++, token = token->next) {
-		for (j = 0, operator = operators; j < numOperators; j++, operator = &operators[j]) {
+	for(; token != NULL && token->next != NULL; token = token->next) {
+		for (i = 0, operator = operators; i < numOperators; i++, operator = &operators[i]) {
 			if (strcmp(token->type, OP) == 0 && token->charVal == *operator) {
 				if (token->previous == NULL || token->next == NULL || strcmp(token->next->type, NUM)
 					|| strcmp(token->previous->type, NUM)) {
