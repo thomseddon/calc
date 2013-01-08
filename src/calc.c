@@ -135,9 +135,6 @@ double operation(char operator, double pre, double post)
 		case '+': return pre + post;
 		case '-': return pre - post;
 	}
-
-	printf("Unsupported character");
-	exit(1);
 }
 
 
