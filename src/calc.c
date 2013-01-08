@@ -192,8 +192,12 @@ double evauateScope(struct Scope *scope, struct Scope **currentScope)
 	findOperations("+-", 2, scope); //bodmAS
 
 	/* Cleanup Tokens */
-	total = scope->first->intVal;
-	free(scope->first);
+	if (scope->first != NULL) {
+		total = scope->first->intVal;
+		free(scope->first);
+	} else {
+		total = 0;
+	}
 
 	/*
 	 * If there is a parent then we asscend and clean up the child
