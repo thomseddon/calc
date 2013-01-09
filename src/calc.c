@@ -88,7 +88,6 @@ void freeAll(struct Scope *scope)
 {
 	/* Walk up scopes freeing all tokens */
 	while (scope->parent != NULL) {
-		scope = scope->parent;
 		freeScope(scope, &scope);
 	}
 
