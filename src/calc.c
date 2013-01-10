@@ -235,36 +235,51 @@ double evaluateScope(struct Scope *scope, struct Scope **currentScope)
 
 int main(int argc, char *argv[])
 {
-	char *str;
-	int i;
+	char *input = NULL, c, *str;
+	int inputCount = 0, inputTotal = 0, i;
 	double number;
 
 	/* Kick off scope  */
 	struct Scope *currentScope = NULL;
 	addScope(currentScope, &currentScope);
 
-	/* Tokenise */
-	for (i = 1; i <  argc; i++) {
-		str = argv[i];
-
-		while (*str != '\0') {
-			if (isspace(*str)) {
-				/* Space */
-				str++;
-			} else if (*str == '(') {
-				addScope(currentScope, &currentScope);
-				str++;
-			} else if (*str == ')') {
-				insertToken(currentScope, NUM, '\0', evaluateScope(currentScope, &currentScope));
-				str++;
-			} else if ((number = strtold(str, &str)) == 0.0L && (number = strtoconst(str, &str)) == 0.0L) {
-				/* NaN */
-				insertToken(currentScope, OP, normalise(*str), 0);
-				str++;
-			} else {
-				/* Number */
-				insertToken(currentScope, NUM, '\0', number);
+	/* Read input from... */
+	if (argc == 1) {
+		/* stdin */
+		while ((c = getchar()) != '\n') {
+			if (inputCount >= inputTotal) {
+				input = realloc(input, (inputTotal += 5));
 			}
+			input[inputCount++] = c;
+		}
+	} else {
+		/* args */
+		for (i = 1; i < argc; i++) {
+			input = realloc(input, (inputTotal += strlen(argv[i]) + 1));
+			strcat(input, argv[i]);
+			strcat(input, " ");
+		}
+	}
+
+	/* Tokenise */
+	str = input;
+	while (*str != '\0') {
+		if (isspace(*str)) {
+			/* Space */
+			str++;
+		} else if (*str == '(') {
+			addScope(currentScope, &currentScope);
+			str++;
+		} else if (*str == ')') {
+			insertToken(currentScope, NUM, '\0', evaluateScope(currentScope, &currentScope));
+			str++;
+		} else if ((number = strtold(str, &str)) == 0.0L && (number = strtoconst(str, &str)) == 0.0L) {
+			/* NaN */
+			insertToken(currentScope, OP, normalise(*str), 0);
+			str++;
+		} else {
+			/* Number */
+			insertToken(currentScope, NUM, '\0', number);
 		}
 	}
 
@@ -273,6 +288,8 @@ int main(int argc, char *argv[])
 	 * TODO: Allow precision to be specified
 	 */
 	printf("%.15g\n", evaluateScope(currentScope, &currentScope));
+
+	free(input);
 
 	return 0;
 }
