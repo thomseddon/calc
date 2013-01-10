@@ -20,7 +20,7 @@ calc: src/calc.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 debug: src/calc.o
-	$(CC) $(CFLAGS) $(DEBUGFLAGS) $^ -o calc
+	$(CC) $(CFLAGS) $(CDEBUG) $^ -o calc
 
 install: all clean
 	install -c calc $(BINDIR)/calc
