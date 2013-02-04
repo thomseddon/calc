@@ -30,6 +30,13 @@ struct Constant {
 #define OP "OP"
 #define NUM "NUM"
 
+struct String {
+	char *str;
+	int total;
+	int count;
+	int blockSize;
+};
+
 struct Token {
 	char type[3];
 	char charVal;

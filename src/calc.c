@@ -22,6 +22,31 @@
 #include <math.h>
 #include "calc.h"
 
+void stringAlloc(struct String *string, int required)
+{
+	if (string->count + required >= string->total) {
+		string->total += (required > string->blockSize ? required : string->blockSize);
+		string->str = realloc(string->str, string->total);
+	}
+}
+
+void stringAddChar(struct String *string, char ch)
+{
+	stringAlloc(string, 1);
+	string->str[string->count++] = ch;
+	string->str[string->count] = '\0';
+}
+
+void stringAddStr(struct String *string, char *str)
+{
+	int len;
+
+	stringAlloc(string, len = strlen(str));
+
+	string->count == 0 ? strcpy(string->str, str) : strcat(string->str, str);
+	string->count += len;
+}
+
 void addScope(struct Scope *scope, struct Scope **currentScope)
 {
 	if (scope == NULL) {
@@ -235,9 +260,10 @@ double evaluateScope(struct Scope *scope, struct Scope **currentScope)
 
 int main(int argc, char *argv[])
 {
-	char *input = NULL, c, *str;
-	int inputCount = 0, inputTotal = 0, i;
+	char ch, *str;
+	int i;
 	double number;
+	struct String input = {NULL, 0, 0, 5};
 
 	/* Kick off scope  */
 	struct Scope *currentScope = NULL;
@@ -246,23 +272,19 @@ int main(int argc, char *argv[])
 	/* Read input from... */
 	if (argc == 1) {
 		/* stdin */
-		while ((c = getchar()) != '\n') {
-			if (inputCount >= inputTotal) {
-				input = realloc(input, (inputTotal += 5));
-			}
-			input[inputCount++] = c;
+		while ((ch = getchar()) != '\n' && ch != EOF) {
+			stringAddChar(&input, ch);
 		}
 	} else {
 		/* args */
 		for (i = 1; i < argc; i++) {
-			input = realloc(input, (inputTotal += strlen(argv[i]) + 1));
-			strcat(input, argv[i]);
-			strcat(input, " ");
+			stringAddStr(&input, argv[i]);
+			stringAddChar(&input, ' ');
 		}
 	}
 
 	/* Tokenise */
-	str = input;
+	str = input.str;
 	while (*str != '\0') {
 		if (isspace(*str)) {
 			/* Space */
@@ -289,7 +311,7 @@ int main(int argc, char *argv[])
 	 */
 	printf("%.15g\n", evaluateScope(currentScope, &currentScope));
 
-	free(input);
+	free(input.str);
 
 	return 0;
 }
