@@ -196,6 +196,9 @@ double operation(char operator, double pre, double post)
 		case '+': return pre + post;
 		case '-': return pre - post;
 	}
+
+	printf("Unknown operator\n");
+	exit(1);
 }
 
 void findOperations(char *operators, int numOperators, struct Scope *scope)
