@@ -260,7 +260,7 @@ double evaluateScope(struct Scope *scope, struct Scope **currentScope)
 
 int main(int argc, char *argv[])
 {
-	char ch, *str;
+	char ch, *str, *strStart;
 	int i;
 	double number;
 	struct String input = {NULL, 0, 0, 5};
@@ -286,6 +286,7 @@ int main(int argc, char *argv[])
 	/* Tokenise */
 	str = input.str;
 	while (*str != '\0') {
+		strStart = str;
 		if (isspace(*str)) {
 			/* Space */
 			str++;
@@ -301,6 +302,12 @@ int main(int argc, char *argv[])
 			str++;
 		} else {
 			/* Number */
+			if ((*strStart == '+' || *strStart == '-')
+				&& currentScope->last != NULL
+				&& strcmp(currentScope->last->type, OP)) {
+				//Assume this was supposed to be an operation
+				insertToken(currentScope, OP, *strStart, 0);
+			}
 			insertToken(currentScope, NUM, '\0', number);
 		}
 	}
